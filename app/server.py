@@ -42,6 +42,20 @@ app.mount("/assets", StaticFiles(directory=str(OUTPUT)), name="assets")
 JOBS: dict[str, Job] = {}
 
 
+def _asset_url(image_path: Optional[str]) -> Optional[str]:
+    """Map a stored image path to a browser URL served by the /assets mount."""
+    if not image_path:
+        return None
+    s = str(image_path).replace("\\", "/")
+    if "/output/" in s:
+        rel = s.split("/output/", 1)[1]
+    elif s.startswith("output/"):
+        rel = s[len("output/"):]
+    else:
+        rel = Path(s).name
+    return "/assets/" + rel.lstrip("/")
+
+
 @app.on_event("startup")
 def _startup() -> None:
     memory.init_db()
@@ -66,6 +80,15 @@ def make_brand(req: BrandReq) -> dict:
 @app.get("/brands")
 def list_brands() -> dict:
     return {"brands": memory.list_brand_kits()}
+
+
+@app.get("/creatives")
+def get_creatives(brand_kit_id: Optional[str] = None, limit: int = 60) -> dict:
+    """Persisted gallery — survives page reloads and reconnects (reads from SQLite)."""
+    items = memory.list_creatives(brand_kit_id, limit)
+    for it in items:
+        it["image_url"] = _asset_url(it.get("image_path"))
+    return {"creatives": items}
 
 
 class GenerateReq(BaseModel):

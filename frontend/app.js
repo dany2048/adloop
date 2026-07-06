@@ -60,7 +60,7 @@ async function loadStats() {
   const stat = (ic, num, lbl) => `<div class="card stat"><div class="ic">${S(ICONS[ic])}</div><div class="num">${num}</div><div class="lbl">${lbl}</div></div>`;
   $('#home-stats').innerHTML =
     stat('tag', brands.length, 'Brands in memory') +
-    stat('grid', LAST.length || '—', 'Creatives this session') +
+    stat('grid', LAST.length || '—', 'Creatives generated') +
     stat('chart', avg, 'Avg critic score') +
     stat('spark', pass, 'Passed the bar');
 }
@@ -102,8 +102,9 @@ $('#generate-btn').onclick = async () => {
   const objective = $('#objective').value.trim() || 'Drive new customers';
   if (!brand_kit_id) { alert('Add a brand first.'); return; }
   const body = { brand_kit_id, objective, channel: CHANNEL, n: +$('#n').value, max_rounds: +$('#rounds').value };
-  const { job_id } = await api('/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  startRun(job_id, objective);
+  const res = await api('/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!res || !res.job_id) { alert('Could not start generation: ' + ((res && res.error) || 'unknown error')); return; }
+  startRun(res.job_id, objective);
 };
 
 // ---------- working / live stream ----------
@@ -129,11 +130,11 @@ function startRun(jobId, objective) {
     tl.appendChild(entryEl(e));
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   };
-  es.addEventListener('end', (ev) => {
-    const { status: st, creatives = [] } = JSON.parse(ev.data);
-    LAST = creatives;
+  es.addEventListener('end', async (ev) => {
+    const { status: st } = JSON.parse(ev.data);
     status.textContent = st; status.className = 'status-pill ' + st;
     es.close();
+    await loadCreatives();   // pull the full persisted history (this run + everything before)
     setTimeout(() => { show('gallery'); }, 900);
   });
   es.onerror = () => { status.textContent = 'connection lost'; status.className = 'status-pill error'; es.close(); };
@@ -149,7 +150,7 @@ function renderGallery(creatives) {
     const bars = DIMS.map(([k, lbl]) => `<div class="bar"><span>${lbl}</span><div class="track"><div class="fill" style="width:${(sc[k] || 0) * 10}%"></div></div><span>${sc[k] ?? 0}</span></div>`).join('');
     const pass = c.status === 'pass';
     return `<div class="creative">
-      <div class="img"><img src="${assetUrl(c.image_path)}" alt="">
+      <div class="img"><img src="${c.image_url || assetUrl(c.image_path)}" alt="">
         <span class="score-pill" style="background:${scoreColor(ov)}">${ov}</span></div>
       <div class="body">
         <div class="hl">${(c.brief && c.brief.headline) || ''}</div>
@@ -160,5 +161,15 @@ function renderGallery(creatives) {
   }).join('');
 }
 
+// ---------- persisted creatives (survive reload) ----------
+async function loadCreatives() {
+  try {
+    const { creatives = [] } = await api('/creatives');
+    LAST = creatives;
+  } catch (e) { /* keep whatever we have */ }
+  return LAST;
+}
+
 // ---------- boot ----------
-legend(); loadStats(); loadBrandSelect();
+legend(); loadBrandSelect();
+loadCreatives().then(() => { loadStats(); renderGallery(LAST); });

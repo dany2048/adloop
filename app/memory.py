@@ -126,6 +126,35 @@ def save_creative(creative: dict[str, Any]) -> str:
     return cid
 
 
+def list_creatives(brand_kit_id: str | None = None, limit: int = 60) -> list[dict[str, Any]]:
+    """All persisted creatives (newest first), shaped for the gallery. Survives reloads."""
+    q = ("SELECT id, brand_kit_id, brief, image_path, channel_size, scorecard, "
+         "overall_score, rationale, status, created_at FROM creatives")
+    params: tuple = ()
+    if brand_kit_id:
+        q += " WHERE brand_kit_id=?"
+        params = (brand_kit_id,)
+    q += " ORDER BY created_at DESC LIMIT ?"
+    params = params + (limit,)
+    with _connect() as c:
+        rows = c.execute(q, params).fetchall()
+    return [
+        {
+            "id": r["id"],
+            "brand_kit_id": r["brand_kit_id"],
+            "brief": json.loads(r["brief"] or "{}"),
+            "image_path": r["image_path"],
+            "channel_size": r["channel_size"],
+            "scorecard": json.loads(r["scorecard"] or "{}"),
+            "overall_score": r["overall_score"],
+            "rationale": r["rationale"],
+            "status": r["status"],
+            "created_at": r["created_at"],
+        }
+        for r in rows
+    ]
+
+
 def top_creatives(brand_kit_id: str, k: int = 3) -> list[dict[str, Any]]:
     """The best past ads for a brand — fed back into the Copywriter/Art Director."""
     with _connect() as c:
