@@ -44,9 +44,10 @@ Apply this doctrine (your compiled knowledge):
 
 Hard rules:
 - Every angle must use a DIFFERENT primary framework + a DIFFERENT emotional driver. No two angles may feel alike.
-- The HOOK is the whole game: specific, curiosity- or pain-driven, never generic.
+- SPECIFICITY IS THE WHOLE GAME. Every hook AND headline MUST anchor to a concrete, real detail from the brand's VALUE PROPS or product facts — a material, a number, a certification, a named benefit, a price, a real outcome. If a line could be pasted onto any brand in the category, it has FAILED. "Rich Flavor, Every Day" fails; "Halal-certified 170g refills, half the price of pods" wins.
+- BANNED — never output these or anything like them: "Act Fast", "Limited Stock", "Loved by All", "Trusted by Many", "Rich Flavor Every Day", "Quality You Can Trust", "Elevate Your Everyday", "Discover the Difference", "Experience the Best", "Made for You". Vague filler is an automatic fail.
 - One big idea per ad. One clear CTA. Concrete > abstract. Show the dream outcome.
-- Stay true to the brand's tone and rules. Never invent product claims that aren't supported by the brand kit.
+- Stay true to the brand's tone and rules. Never invent claims the brand kit doesn't support — but you MUST use the specific claims it DOES give you.
 - Respect the channel's format (headline/primary-text length norms)."""
 
 _TASK = """Return ONE JSON object: {{"angles": [ ... ]}} with exactly {n} angle objects. Each angle:
@@ -55,14 +56,20 @@ _TASK = """Return ONE JSON object: {{"angles": [ ... ]}} with exactly {n} angle 
   "framework": str,           // which copy framework governs it (PAS, AIDA, 4 U's, Value-Equation lead, Godfather Offer, etc.)
   "emotional_driver": str,    // the core emotion this pulls (fear of missing out, status, relief, belonging, pride...)
   "dream_outcome": str,       // the after-state this ad sells
-  "hook": str,                // the scroll-stopping first line (this is the most important field)
-  "headline": str,            // the on-image headline (punchy, <= ~7 words ideal)
-  "subhead": str,             // supporting line under the headline
+  "specific_detail": str,     // the exact product fact this angle is built on: a number, material, certification, or price (e.g. "170g refill", "merino wool", "halal-certified", "under $145"). It MUST appear verbatim in the headline or subhead.
+  "hook": str,                // the scroll-stopping first line (this is the most important field) — must contain the specific_detail or another concrete fact
+  "headline": str,            // the on-image headline (punchy, <= ~7 words); must be concrete, never vague filler
+  "subhead": str,             // supporting line under the headline; carries the specific_detail if the headline is short
   "primary_text": str,        // the platform caption / body copy (2-4 short lines)
   "cta": str,                 // call to action (button-style, e.g. "Shop the bestseller")
   "visual_idea": str          // a one-line hint for the art director (the Art Director may override)
 }}
-Make the {n} angles genuinely diverse in framework, emotion, and message."""
+Make the {n} angles genuinely diverse in framework, emotion, and message.
+
+Bar for specificity (match this level):
+  WEAK  → headline "Rich Flavor, Every Day"      (generic, rejected)
+  STRONG→ headline "170g Refills, Half the Pods"  subhead "Halal-certified Arabica-Robusta gold."
+Copy at the WEAK level fails. Every angle must hit the STRONG bar using THIS brand's real facts."""
 
 
 def run(
@@ -106,6 +113,9 @@ def run(
 
     user = (
         f"CAMPAIGN OBJECTIVE: {objective}\nCHANNEL: {channel}\n\n{brand_block}{memory_block}\n\n"
+        "Build each angle on ONE specific value prop or product fact from above and name it concretely in "
+        "the hook and headline (a material, number, certification, price, or named outcome). "
+        "Reread each hook/headline before finalizing: if it's generic, rewrite it with a real detail.\n\n"
         + _TASK.format(n=n)
     )
 
@@ -118,7 +128,7 @@ def run(
             {"role": "user", "content": user},
         ],
         model=config.PLAN_MODEL,
-        temperature=0.9,
+        temperature=0.8,
     )
     angles = result.get("angles", []) if isinstance(result, dict) else []
 

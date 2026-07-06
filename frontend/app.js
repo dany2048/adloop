@@ -115,8 +115,16 @@ function entryEl(e) {
   if (e.kind === 'verdict') cls += /PASS/.test(e.message) ? ' verdict-pass' : ' verdict-reject';
   div.className = cls;
   const thumb = e.data && e.data.image_path ? `<img class="thumb" src="${assetUrl(e.data.image_path)}?t=${Date.now()}">` : '';
+  const refs = (e.data && e.data.references && e.data.references.length)
+    ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">`
+      + e.data.references.slice(0, 6).map(u =>
+          `<img src="${u}" loading="lazy" referrerpolicy="no-referrer" title="real reference"
+                style="width:62px;height:62px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.12)">`
+        ).join('')
+      + `</div>`
+    : '';
   div.innerHTML = `<div class="who"><span class="dot" style="background:${a.color}"></span>${a.name}</div>
-    <div class="msg"><span class="k">${e.kind}</span>${e.message}</div>${thumb}`;
+    <div class="msg"><span class="k">${e.kind}</span>${e.message}</div>${thumb}${refs}`;
   return div;
 }
 function startRun(jobId, objective) {
