@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdLoop — the AI creative team that critiques its own work</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Ad<span class="grad">Loop</span></span>
+    </div>
+    <nav class="nav">
+      <p class="nav-group">Create</p>
+      <a class="nav-item active" data-view="home"><i data-i="home"></i>Home</a>
+      <a class="nav-item" data-view="new"><i data-i="spark"></i>New Campaign</a>
+      <a class="nav-item" data-view="gallery"><i data-i="grid"></i>Gallery</a>
+      <p class="nav-group">Assets</p>
+      <a class="nav-item" data-view="brands"><i data-i="tag"></i>Brands</a>
+      <p class="nav-group">Analyze</p>
+      <a class="nav-item disabled"><i data-i="chart"></i>Insights <span class="soon">soon</span></a>
+    </nav>
+    <div class="powered">Built on <b>Qwen&nbsp;Cloud</b></div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header class="topbar">
+      <div class="search"><i data-i="search"></i><input placeholder="Search" disabled><kbd>⌘K</kbd></div>
+      <div class="top-actions">
+        <a class="top-link" href="https://github.com/dany2048" target="_blank">GitHub</a>
+        <a class="top-link" href="/docs" target="_blank">API</a>
+        <button class="icon-btn" id="theme-toggle" title="Toggle theme"><i data-i="moon"></i></button>
+        <span class="avatar"></span>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- HOME -->
+      <section class="view" id="view-home">
+        <h1 class="page-title">The AI creative team that <span class="grad">critiques its own work</span></h1>
+        <p class="page-sub">Drop in a product URL. A society of agents researches the brand, writes the angles, designs the ads, and scores every one before you ever see it.</p>
+        <div class="cards stats" id="home-stats"></div>
+        <div class="home-cta">
+          <button class="btn primary" data-go="new">Start a campaign</button>
+          <button class="btn ghost" data-go="gallery">View gallery</button>
+        </div>
+        <div class="agent-row" id="agent-legend"></div>
+      </section>
+
+      <!-- NEW CAMPAIGN -->
+      <section class="view hidden" id="view-new">
+        <h1 class="page-title">New campaign</h1>
+        <p class="page-sub">Pick a brand (or add one from a URL), set the objective, and let the team work.</p>
+        <div class="panel">
+          <label class="field">
+            <span>Brand</span>
+            <div class="brand-pick">
+              <select id="brand-select"></select>
+              <button class="btn ghost sm" id="add-brand-btn">+ Add from URL</button>
+            </div>
+          </label>
+          <div class="add-brand hidden" id="add-brand-row">
+            <input id="brand-url" placeholder="https://yourbrand.com">
+            <button class="btn primary sm" id="extract-btn">Extract brand</button>
+          </div>
+          <label class="field"><span>Objective</span>
+            <input id="objective" placeholder="Drive first purchases for the summer collection"></label>
+          <label class="field"><span>Channel</span>
+            <div class="chips" id="channel-chips">
+              <button class="chip active" data-v="instagram">Instagram 4:5</button>
+              <button class="chip" data-v="story">Story 9:16</button>
+              <button class="chip" data-v="meta_feed">Meta feed</button>
+            </div>
+          </label>
+          <div class="row2">
+            <label class="field"><span>Variants</span><input id="n" type="number" min="1" max="4" value="3"></label>
+            <label class="field"><span>Max revision rounds</span><input id="rounds" type="number" min="0" max="3" value="2"></label>
+          </div>
+          <button class="btn primary lg" id="generate-btn">Generate ads ✦</button>
+        </div>
+      </section>
+
+      <!-- WORKING -->
+      <section class="view hidden" id="view-working">
+        <div class="working-head">
+          <h1 class="page-title">The team is working</h1>
+          <span class="status-pill" id="run-status">running</span>
+        </div>
+        <p class="page-sub" id="run-objective"></p>
+        <div class="timeline" id="timeline"></div>
+      </section>
+
+      <!-- GALLERY -->
+      <section class="view hidden" id="view-gallery">
+        <h1 class="page-title">Gallery</h1>
+        <p class="page-sub">Every creative carries the critic's scorecard. Green passed the bar; amber is best effort.</p>
+        <div class="gallery" id="gallery"></div>
+      </section>
+
+      <!-- BRANDS -->
+      <section class="view hidden" id="view-brands">
+        <h1 class="page-title">Brands</h1>
+        <p class="page-sub">Brand DNA the Strategist extracted and stored in memory.</p>
+        <div class="cards" id="brands-list"></div>
+      </section>
+    </main>
+  </div>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

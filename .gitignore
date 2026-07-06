@@ -1,0 +1,24 @@
+# secrets
+.env
+*.key
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# generated assets
+output/
+!output/.gitkeep
+
+# local db / test data (branded — never commit)
+data/
+!data/.gitkeep
+
+# os
+.DS_Store
+
+# internal build/session notes — not for the public repo
+docs/

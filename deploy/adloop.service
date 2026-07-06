@@ -1,0 +1,18 @@
+[Unit]
+Description=AdLoop — multi-agent ad-creative society (FastAPI)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/adloop
+EnvironmentFile=/opt/adloop/.env
+# uvicorn on :80 so judges hit http://<ip>/ with no port. Runs as root (systemd default) to bind 80.
+ExecStart=/opt/adloop/.venv/bin/uvicorn app.server:app --host 0.0.0.0 --port 80 --workers 1
+Restart=always
+RestartSec=3
+# Keep it alive through the whole judging window (Jul 10-31).
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target

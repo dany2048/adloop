@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+{% if font_query %}<link href="https://fonts.googleapis.com/css2?{{ font_query }}&display=swap" rel="stylesheet">{% endif %}
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { width:{{ w }}px; height:{{ h }}px; overflow:hidden; }
+  .ad {
+    position:relative; width:{{ w }}px; height:{{ h }}px;
+    background-image:url('{{ bg_data_url }}');
+    background-size:cover; background-position:center;
+    font-family:'{{ body_font }}', system-ui, sans-serif;
+    color:{{ text_color }};
+  }
+  /* legibility scrim: dark gradient anchored to the text side */
+  .scrim {
+    position:absolute; inset:0;
+    background:linear-gradient(
+      {% if layout == 'top' %}to bottom, rgba(0,0,0,.72) 0%, rgba(0,0,0,.30) 38%, rgba(0,0,0,0) 60%
+      {% elif layout == 'center' %}to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,.55) 100%
+      {% else %}to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.38) 40%, rgba(0,0,0,0) 68%{% endif %});
+  }
+  .content {
+    position:absolute; left:0; right:0; padding:{{ pad }}px;
+    display:flex; flex-direction:column; gap:{{ gap }}px;
+    {% if layout == 'top' %}top:0; align-items:flex-start; text-align:left;
+    {% elif layout == 'center' %}top:50%; transform:translateY(-50%); align-items:center; text-align:center;
+    {% else %}bottom:0; align-items:flex-start; text-align:left;{% endif %}
+  }
+  .eyebrow { font-size:{{ (h*0.022)|round|int }}px; letter-spacing:.14em; text-transform:uppercase;
+             font-weight:700; color:{{ accent }}; }
+  .headline {
+    font-family:'{{ display_font }}', '{{ body_font }}', system-ui, sans-serif;
+    font-weight:800; line-height:1.02; font-size:{{ headline_px }}px;
+    text-shadow:0 2px 18px rgba(0,0,0,.45); max-width:92%;
+  }
+  .subhead { font-size:{{ (h*0.030)|round|int }}px; font-weight:500; line-height:1.25;
+             max-width:80%; opacity:.96; }
+  .cta {
+    margin-top:{{ (gap*0.6)|round|int }}px; align-self:{{ 'center' if layout=='center' else 'flex-start' }};
+    background:{{ accent }}; color:{{ cta_text }}; font-weight:800;
+    font-size:{{ (h*0.026)|round|int }}px; padding:{{ (h*0.018)|round|int }}px {{ (h*0.035)|round|int }}px;
+    border-radius:{{ (h*0.012)|round|int }}px; text-transform:uppercase; letter-spacing:.03em;
+  }
+</style>
+</head>
+<body>
+  <div class="ad">
+    <div class="scrim"></div>
+    <div class="content">
+      {% if eyebrow %}<div class="eyebrow">{{ eyebrow }}</div>{% endif %}
+      <div class="headline">{{ headline }}</div>
+      {% if subhead %}<div class="subhead">{{ subhead }}</div>{% endif %}
+      {% if cta %}<div class="cta">{{ cta }}</div>{% endif %}
+    </div>
+  </div>
+</body>
+</html>

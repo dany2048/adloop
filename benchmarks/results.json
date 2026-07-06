@@ -1,0 +1,33 @@
+{
+  "brand": "Allbirds",
+  "objective": "Drive first purchases for the summer collection",
+  "n": 3,
+  "max_rounds": 1,
+  "baseline": {
+    "n": 3,
+    "avg_overall": 56.7,
+    "pass_rate": 0,
+    "dims": {
+      "thumbstop": 4.33,
+      "hierarchy": 5.33,
+      "legibility": 6.67,
+      "brand_fit": 4.67,
+      "hook_clarity": 5.67,
+      "cta_visibility": 7.33
+    }
+  },
+  "society": {
+    "n": 3,
+    "avg_overall": 64.4,
+    "pass_rate": 0,
+    "dims": {
+      "thumbstop": 4.67,
+      "hierarchy": 5.67,
+      "legibility": 7.0,
+      "brand_fit": 8.33,
+      "hook_clarity": 5.33,
+      "cta_visibility": 7.67
+    }
+  },
+  "delta_overall": 7.7
+}
