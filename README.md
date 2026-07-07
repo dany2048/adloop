@@ -81,6 +81,20 @@ python -m uvicorn app.server:app --host 127.0.0.1 --port 8011
 # open http://127.0.0.1:8011
 ```
 
+## MCP integration
+
+The society's agents are also exposed over the **Model Context Protocol**, so any MCP client
+(Claude Desktop, IDEs, other agents) can drive AdLoop as tools — including the moat, the vision
+Critic, to **score any ad image 0–100 before ad spend**. Tools: `list_brands`, `strategize_brand`,
+`critique_ad`, `generate_campaign`.
+
+```bash
+python -m app.mcp_server        # stdio JSON-RPC server (zero extra dependencies)
+```
+
+Register it with a client using `mcp.example.json` (set `cwd` to this repo). Zero-dependency,
+hand-rolled to the MCP spec so it runs on Python 3.9.
+
 ## Deploy
 
 - **Hugging Face Space** — this repo is a Docker Space; the root `Dockerfile` runs it. Set `DASHSCOPE_API_KEY` as a Space secret.

@@ -115,6 +115,6 @@ if __name__ == "__main__":
     import sys
 
     img = sys.argv[1] if len(sys.argv) > 1 else "output/_smoke.png"
-    demo_brief = {"hook": "Comfort that lasts all day", "headline": "Made From Nature", "subhead": "Merino wool sneakers", "cta": "Shop now"}
+    demo_brief = {"hook": "Comfort that lasts all day", "headline": "Made For Movement", "subhead": "The everyday essential", "cta": "Shop now"}
     demo_brand = {"tone": "warm, natural, grounded", "rules": ["warm natural lighting", "show product in real life"], "palette": ["#A8C686", "#000"]}
     print(json.dumps(review(img, demo_brief, demo_brand), indent=2))
