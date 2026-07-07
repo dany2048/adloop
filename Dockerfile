@@ -8,6 +8,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-fetch the rembg background-removal model at build time so the first product
+# composite on a live Space doesn't stall on a ~176MB download (best-effort; runtime
+# falls back to on-demand download if this is skipped).
+RUN python -c "from rembg import new_session; new_session('u2net')" || echo "u2net predownload skipped"
+
 COPY . .
 
 # SQLite memory store + generated assets live under the app dir (writable).
