@@ -19,7 +19,12 @@ HTTP_BASE_URL = os.getenv(
 TEXT_MODEL = os.getenv("QWEN_TEXT_MODEL", "qwen-plus")
 PLAN_MODEL = os.getenv("QWEN_PLAN_MODEL", "qwen-max")
 VL_MODEL = os.getenv("QWEN_VL_MODEL", "qwen-vl-max")
-WANX_T2I_MODEL = os.getenv("WANX_T2I_MODEL", "wan2.2-t2i-flash")
+WANX_T2I_MODEL = os.getenv("WANX_T2I_MODEL", "wan2.2-t2i-plus")
+# If the primary model's free quota is exhausted (AllocationQuota.FreeTierOnly), fall through
+# to the next model — each Wanxiang model has its own free allotment.
+WANX_T2I_FALLBACKS = [
+    m.strip() for m in os.getenv("WANX_T2I_FALLBACKS", "wan2.2-t2i-plus,wan2.2-t2i-flash").split(",") if m.strip()
+]
 EMBED_MODEL = os.getenv("QWEN_EMBED_MODEL", "text-embedding-v3")
 
 # Apify (live Pinterest reference scraping for the Design Researcher; optional).

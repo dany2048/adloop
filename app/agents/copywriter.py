@@ -15,7 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .. import config, memory, qwen_client
+from .. import config, memory, prompts, qwen_client
 
 _PLAYBOOK_PATH = Path(__file__).resolve().parent.parent / "knowledge" / "copywriting_playbook.md"
 
@@ -56,7 +56,7 @@ _TASK = """Return ONE JSON object: {{"angles": [ ... ]}} with exactly {n} angle 
   "framework": str,           // which copy framework governs it (PAS, AIDA, 4 U's, Value-Equation lead, Godfather Offer, etc.)
   "emotional_driver": str,    // the core emotion this pulls (fear of missing out, status, relief, belonging, pride...)
   "dream_outcome": str,       // the after-state this ad sells
-  "specific_detail": str,     // the exact product fact this angle is built on: a number, material, certification, or price (e.g. "170g refill", "merino wool", "halal-certified", "under $145"). It MUST appear verbatim in the headline or subhead.
+  "specific_detail": str,     // the exact real fact this angle is built on — a number, material, certification, price, timeframe, guarantee, result, or named capability (e.g. "170g refill", "halal-certified" for a product; "book 10 clients in 30 days", "cancel anytime", "2-minute setup", "used by 4,000 teams" for a service/app). It MUST appear verbatim in the headline or subhead.
   "hook": str,                // the scroll-stopping first line (this is the most important field) — must contain the specific_detail or another concrete fact
   "headline": str,            // the on-image headline (punchy, <= ~7 words); must be concrete, never vague filler
   "subhead": str,             // supporting line under the headline; carries the specific_detail if the headline is short
@@ -124,7 +124,7 @@ def run(
 
     result = qwen_client.chat_json(
         [
-            {"role": "system", "content": _SYS.format(doctrine=doctrine)},
+            {"role": "system", "content": prompts.render("copywriter", _SYS, doctrine=doctrine)},
             {"role": "user", "content": user},
         ],
         model=config.PLAN_MODEL,
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
     from .strategist import run as strat_run
 
-    url = sys.argv[1] if len(sys.argv) > 1 else "https://www.allbirds.com"
+    url = sys.argv[1] if len(sys.argv) > 1 else "https://example.com"
     obj = sys.argv[2] if len(sys.argv) > 2 else "Drive first purchases for the summer collection"
     kit = strat_run(url, persist=True)
     out = run(kit, obj, channel="instagram", n=3)

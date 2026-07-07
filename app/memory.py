@@ -56,6 +56,8 @@ def init_db() -> None:
                 overall_score REAL,
                 rationale     TEXT,
                 status        TEXT,
+                trail         TEXT,
+                design_refs   TEXT,
                 created_at    REAL NOT NULL
             );
             CREATE TABLE IF NOT EXISTS memories (
@@ -68,10 +70,26 @@ def init_db() -> None:
                 created_at   REAL NOT NULL,
                 last_used    REAL
             );
+            CREATE TABLE IF NOT EXISTS runs (
+                id          TEXT PRIMARY KEY,
+                brand_name  TEXT,
+                objective   TEXT,
+                channel     TEXT,
+                status      TEXT,
+                avg_score   REAL,
+                payload     TEXT NOT NULL,
+                created_at  REAL NOT NULL
+            );
             CREATE INDEX IF NOT EXISTS idx_creatives_brand ON creatives(brand_kit_id);
             CREATE INDEX IF NOT EXISTS idx_memories_brand  ON memories(brand_kit_id);
             """
         )
+        # migration: add trail to DBs created before the critic-trail feature
+        for col in ("trail", "design_refs"):
+            try:
+                c.execute(f"ALTER TABLE creatives ADD COLUMN {col} TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
 
 
 # ---------------------------------------------------------------- brand kits
@@ -108,8 +126,8 @@ def save_creative(creative: dict[str, Any]) -> str:
         c.execute(
             """INSERT OR REPLACE INTO creatives
                (id, brand_kit_id, brief, image_path, channel_size, scorecard,
-                overall_score, rationale, status, created_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                overall_score, rationale, status, trail, design_refs, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 cid,
                 creative.get("brand_kit_id", ""),
@@ -120,6 +138,8 @@ def save_creative(creative: dict[str, Any]) -> str:
                 float(sc.get("overall", 0.0) or 0.0),
                 creative.get("rationale", ""),
                 creative.get("status", ""),
+                json.dumps(creative.get("trail") or []),
+                json.dumps(creative.get("design_refs") or []),
                 time.time(),
             ),
         )
@@ -129,7 +149,7 @@ def save_creative(creative: dict[str, Any]) -> str:
 def list_creatives(brand_kit_id: str | None = None, limit: int = 60) -> list[dict[str, Any]]:
     """All persisted creatives (newest first), shaped for the gallery. Survives reloads."""
     q = ("SELECT id, brand_kit_id, brief, image_path, channel_size, scorecard, "
-         "overall_score, rationale, status, created_at FROM creatives")
+         "overall_score, rationale, status, trail, design_refs, created_at FROM creatives")
     params: tuple = ()
     if brand_kit_id:
         q += " WHERE brand_kit_id=?"
@@ -149,6 +169,8 @@ def list_creatives(brand_kit_id: str | None = None, limit: int = 60) -> list[dic
             "overall_score": r["overall_score"],
             "rationale": r["rationale"],
             "status": r["status"],
+            "trail": json.loads(r["trail"] or "[]"),
+            "design_refs": json.loads(r["design_refs"] or "[]"),
             "created_at": r["created_at"],
         }
         for r in rows
@@ -173,6 +195,35 @@ def top_creatives(brand_kit_id: str, k: int = 3) -> list[dict[str, Any]]:
         }
         for r in rows
     ]
+
+
+# ---------------------------------------------------------------- runs (society history)
+
+def save_run(run_id: str, brand_name: str, objective: str, channel: str,
+             status: str, avg_score: float, payload: dict[str, Any]) -> None:
+    with _connect() as c:
+        c.execute(
+            """INSERT OR REPLACE INTO runs
+               (id, brand_name, objective, channel, status, avg_score, payload, created_at)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (run_id, brand_name, objective, channel, status, avg_score,
+             json.dumps(payload), time.time()),
+        )
+
+
+def list_runs(limit: int = 50) -> list[dict[str, Any]]:
+    with _connect() as c:
+        rows = c.execute(
+            "SELECT id, brand_name, objective, channel, status, avg_score, created_at "
+            "FROM runs ORDER BY created_at DESC LIMIT ?", (limit,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_run(run_id: str) -> dict[str, Any] | None:
+    with _connect() as c:
+        row = c.execute("SELECT payload FROM runs WHERE id=?", (run_id,)).fetchone()
+    return json.loads(row["payload"]) if row else None
 
 
 # ---------------------------------------------------------------- memories

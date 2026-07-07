@@ -28,12 +28,17 @@ dashscope.api_key = config.DASHSCOPE_API_KEY
 dashscope.base_http_api_url = config.HTTP_BASE_URL
 
 
-def chat(messages: list[dict], model: str | None = None, temperature: float = 0.8) -> str:
-    """Plain text completion."""
+def chat(messages: list[dict], model: str | None = None, temperature: float = 0.8,
+         enable_search: bool = False) -> str:
+    """Plain text completion. enable_search=True turns on Qwen's built-in web search (DashScope)."""
+    kwargs: dict = {}
+    if enable_search:
+        kwargs["extra_body"] = {"enable_search": True}
     resp = _client.chat.completions.create(
         model=model or config.TEXT_MODEL,
         messages=messages,
         temperature=temperature,
+        **kwargs,
     )
     return resp.choices[0].message.content or ""
 
@@ -80,6 +85,24 @@ def critique(image_path: str | Path, instruction: str, model: str | None = None)
     return resp.choices[0].message.content or ""
 
 
+def _is_quota_error(msg: str) -> bool:
+    """True if the error is a DashScope free-quota/billing block (as opposed to a real failure)."""
+    m = (msg or "").lower()
+    return any(k in m for k in ("allocationquota", "freetieronly", "free quota", "arrearage", "insufficient balance"))
+
+
+class ImageQuotaError(RuntimeError):
+    """Raised when every configured Wanxiang model is out of usable quota."""
+
+
+def _model_chain(model: str | None) -> list[str]:
+    if model:
+        return [model]
+    chain = [config.WANX_T2I_MODEL, *config.WANX_T2I_FALLBACKS]
+    seen: set[str] = set()
+    return [m for m in chain if m and not (m in seen or seen.add(m))]
+
+
 def generate_image(
     prompt: str,
     out_path: str | Path,
@@ -91,30 +114,46 @@ def generate_image(
     """
     Tongyi Wanxiang text-to-image. Synchronous wrapper over the async job.
     `size` uses Wanxiang's WxH format with a '*' separator, e.g. '1024*1024', '720*1280'.
-    """
-    rsp = ImageSynthesis.call(
-        model=model or config.WANX_T2I_MODEL,
-        prompt=prompt,
-        negative_prompt=negative_prompt or None,
-        n=1,
-        size=size,
-    )
-    if rsp.status_code != 200:
-        raise RuntimeError(f"Wanxiang error {rsp.status_code}: {rsp.code} {rsp.message}")
 
-    url = rsp.output.results[0].url
+    Tries the configured model, then falls through the fallback chain when a model's free
+    quota is exhausted (each Wanxiang model has its own allotment). Raises ImageQuotaError
+    with an actionable message only when every model is out of quota.
+    """
     import requests
 
-    deadline = time.time() + timeout
-    while True:
-        r = requests.get(url, timeout=60)
-        if r.status_code == 200:
-            break
-        if time.time() > deadline:
-            raise RuntimeError(f"Timed out downloading generated image: {url}")
-        time.sleep(2)
+    chain = _model_chain(model)
+    quota_hit: Exception | None = None
 
-    out = Path(out_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_bytes(r.content)
-    return out
+    for i, mdl in enumerate(chain):
+        try:
+            rsp = ImageSynthesis.call(
+                model=mdl, prompt=prompt, negative_prompt=negative_prompt or None, n=1, size=size,
+            )
+            if rsp.status_code != 200:
+                raise RuntimeError(f"Wanxiang error {rsp.status_code}: {rsp.code} {rsp.message}")
+
+            url = rsp.output.results[0].url
+            deadline = time.time() + timeout
+            while True:
+                r = requests.get(url, timeout=60)
+                if r.status_code == 200:
+                    break
+                if time.time() > deadline:
+                    raise RuntimeError(f"Timed out downloading generated image: {url}")
+                time.sleep(2)
+
+            out = Path(out_path)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_bytes(r.content)
+            return out
+        except Exception as e:  # noqa: BLE001 — inspect, then fall through or re-raise
+            if _is_quota_error(str(e)):
+                quota_hit = e
+                continue  # this model is out of free quota — try the next one
+            raise
+
+    raise ImageQuotaError(
+        "Image generation is blocked — the DashScope free quota is exhausted for every configured "
+        f"Wanxiang model ({', '.join(chain)}). In the DashScope console: add payment / turn off "
+        "\"use free tier only\" mode, or set WANX_T2I_MODEL to a model that still has quota."
+    ) from quota_hit

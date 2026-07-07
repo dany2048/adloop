@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AdLoop — the AI creative team that critiques its own work</title>
+<title>AdLoop: the AI creative team that critiques its own work</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
@@ -22,54 +22,253 @@
       <a class="nav-item active" data-view="home"><i data-i="home"></i>Home</a>
       <a class="nav-item" data-view="new"><i data-i="spark"></i>New Campaign</a>
       <a class="nav-item" data-view="gallery"><i data-i="grid"></i>Gallery</a>
+      <a class="nav-item" data-view="history"><i data-i="chart"></i>History</a>
       <p class="nav-group">Assets</p>
       <a class="nav-item" data-view="brands"><i data-i="tag"></i>Brands</a>
-      <p class="nav-group">Analyze</p>
-      <a class="nav-item disabled"><i data-i="chart"></i>Insights <span class="soon">soon</span></a>
+      <p class="nav-group">Project</p>
+      <a class="nav-item" data-view="about"><i data-i="tag"></i>About</a>
     </nav>
     <div class="powered">Built on <b>Qwen&nbsp;Cloud</b></div>
   </aside>
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
   <!-- Main -->
   <div class="main">
     <header class="topbar">
-      <div class="search"><i data-i="search"></i><input placeholder="Search" disabled><kbd>⌘K</kbd></div>
-      <div class="top-actions">
-        <a class="top-link" href="https://github.com/dany2048" target="_blank">GitHub</a>
-        <a class="top-link" href="/docs" target="_blank">API</a>
-        <button class="icon-btn" id="theme-toggle" title="Toggle theme"><i data-i="moon"></i></button>
-        <span class="avatar"></span>
+      <button class="menu-btn" id="menu-btn" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="brand brand-top">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Ad<span class="grad">Loop</span></span>
       </div>
     </header>
-
     <main class="content">
       <!-- HOME -->
       <section class="view" id="view-home">
-        <h1 class="page-title">The AI creative team that <span class="grad">critiques its own work</span></h1>
-        <p class="page-sub">Drop in a product URL. A society of agents researches the brand, writes the angles, designs the ads, and scores every one before you ever see it.</p>
-        <div class="cards stats" id="home-stats"></div>
-        <div class="home-cta">
-          <button class="btn primary" data-go="new">Start a campaign</button>
-          <button class="btn ghost" data-go="gallery">View gallery</button>
+        <section class="hero-full">
+          <img src="/hero.png?v=1" class="hero-bg" alt="The AdLoop agent society">
+          <div class="hero-scrim"></div>
+          <div class="hero-inner">
+            <h1 class="hero-title">The AI creative team that <span class="grad">critiques its own work</span></h1>
+            <div class="hero-btns">
+              <button class="btn primary xl" data-go="new">Start a campaign</button>
+              <button class="btn ghost xl" data-go="gallery">View gallery</button>
+            </div>
+          </div>
+        </section>
+        <p class="page-sub intro"><b>AdLoop grades its own ads before you ever see them.</b><br><br>Paste a URL and a society of Qwen-powered agents researches your brand, writes framework-diverse copy, grounds each design in real Pinterest references, and ships finished on-brand creatives. <b>A vision-model critic scores every one from 0 to 100 and sends weak work back for revision, so only ads that clear the bar reach you.</b> Memory means each run beats the last. Built for the Qwen Cloud Hackathon, Track 3: Agent Society.</p>
+
+        <style>
+          /* ---- home + shared view styling (consumes tokens from styles.css) ---- */
+          .intro{max-width:840px}
+          .society{margin-top:var(--sp-8)}
+          .sec-title{font-size:var(--fs-xl);font-weight:800;letter-spacing:-.02em;margin-bottom:var(--sp-1)}
+          .sec-title.mt{margin-top:var(--sp-8)}
+          .sub-title{font-size:var(--fs-base);font-weight:800;margin-bottom:var(--sp-3)}
+          .society .page-sub{margin-bottom:var(--sp-4)}
+          #tune-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:var(--sp-4)}
+          .meta-line{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--faint);margin-top:var(--sp-5)}
+
+          /* sprite idle/live motion */
+          @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+          @keyframes blip{0%,100%{opacity:.4}50%{opacity:1}}
+          .tl-sprite{width:30px;height:30px;border-radius:var(--r-xs);image-rendering:pixelated;vertical-align:middle}
+
+          .jump-new{position:fixed;bottom:var(--sp-6);left:50%;transform:translateX(-50%);z-index:60;background:var(--accent);color:var(--accent-ink);border:none;font-weight:700;font-size:var(--fs-sm);padding:var(--sp-2) var(--sp-4);border-radius:var(--r-full);cursor:pointer;box-shadow:var(--shadow-lg);transition:background .15s ease}
+          .jump-new:hover{background:var(--accent-600)}
+          .jump-new.hidden{display:none}
+          .run-error{margin:var(--sp-4) 0 0;padding:var(--sp-3) var(--sp-4);border:1px solid var(--red);border-radius:var(--r-sm);background:var(--red-50);color:var(--red);font-size:var(--fs-md);font-weight:600;line-height:1.45}
+
+          /* completed-run results panel (shown inline instead of jumping to the global gallery) */
+          .run-results{margin:var(--sp-5) 0 0;padding:var(--sp-5);border:1px solid var(--accent-700);border-radius:var(--r);background:var(--accent-50);animation:rrIn .35s ease}
+          .run-results.hidden{display:none}
+          @keyframes rrIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+          .rr-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--sp-4);flex-wrap:wrap;margin-bottom:var(--sp-4)}
+          .rr-title{font-size:var(--fs-xl);font-weight:800;letter-spacing:-.02em;color:var(--text)}
+          .rr-sub{font-size:var(--fs-md);color:var(--muted);margin-top:2px}
+          .rr-sub b{color:var(--text)}
+          .rr-btns{display:flex;gap:var(--sp-2);flex-wrap:wrap}
+          .rr-grid{margin-top:0}
+          .rr-grid.masonry{columns:4}
+          @media(max-width:1100px){.rr-grid.masonry{columns:3}}
+          @media(max-width:760px){.rr-grid.masonry{columns:2}}
+
+          .history-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:var(--sp-7);align-items:start;margin-top:var(--sp-6)}
+          @media(max-width:820px){.history-layout{grid-template-columns:1fr}}
+          #run-detail{min-width:0}
+          .run-item{border:1px solid var(--border);border-radius:var(--r-sm);padding:var(--sp-3) var(--sp-4);margin-bottom:var(--sp-2);cursor:pointer;background:var(--surface);transition:border-color .15s ease,background .15s ease}
+          .run-item:hover{border-color:var(--accent-700)}
+          .run-item.active{border-color:var(--accent-700);background:var(--accent-50)}
+
+          .modal-overlay{position:fixed;inset:0;background:rgba(8,14,12,.6);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:var(--sp-8) var(--sp-5);overflow-y:auto}
+          .modal-overlay.hidden{display:none}
+          .modal{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--r);padding:var(--sp-6);max-width:820px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+          .modal-head{display:flex;justify-content:space-between;align-items:center}
+          .modal-title{font-size:var(--fs-lg);font-weight:800}
+          .modal-x{background:none;border:none;font-size:var(--fs-xl);cursor:pointer;color:var(--muted);line-height:1;padding:var(--sp-1)}
+          .modal-x:hover{color:var(--text)}
+          .modal .page-sub{margin-bottom:var(--sp-4)}
+
+          /* full-bleed hero banner */
+          .hero-full{position:relative;margin:calc(var(--sp-7)*-1) calc(var(--sp-9)*-1) var(--sp-8);height:66vh;min-height:460px;max-height:720px;overflow:hidden}
+          .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+          .hero-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,13,11,.1) 0%,rgba(7,13,11,.38) 52%,rgba(7,13,11,.84) 100%)}
+          .hero-inner{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-6);padding:0 clamp(28px,5vw,72px) clamp(32px,5vw,56px);max-width:1000px}
+          .hero-title{color:#F7FAF9;font-weight:800;letter-spacing:-.03em;line-height:1.05;font-size:clamp(36px,5.2vw,60px);text-shadow:0 2px 24px rgba(0,0,0,.35);text-wrap:balance}
+          .hero-title .grad{color:#5EEAD4}
+          .hero-btns{display:flex;gap:var(--sp-3);flex-wrap:wrap}
+          .btn.xl{padding:var(--sp-4) var(--sp-6);font-size:var(--fs-lg);border-radius:var(--r-sm)}
+          .hero-full .btn.ghost{background:rgba(252,253,253,.14);color:#F7FAF9;border-color:rgba(252,253,253,.55);backdrop-filter:blur(6px)}
+          .hero-full .btn.ghost:hover{background:rgba(252,253,253,.24);color:#fff;border-color:#F7FAF9}
+          @media(max-width:880px){.hero-full{margin:calc(var(--sp-6)*-1) calc(var(--sp-4)*-1) var(--sp-7);height:56vh;min-height:380px}.hero-inner{gap:var(--sp-4)}}
+
+          .about-links{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-1)}
+          .about-panel{max-width:760px}
+          .about-p{font-size:var(--fs-md);line-height:1.6;margin:0}
+          .wide{max-width:760px}
+          #view-new{max-width:720px;margin:0 auto}
+          #view-new .page-title,#view-new>.page-sub{text-align:center}
+          #view-new .panel{margin-left:auto;margin-right:auto}
+
+          .gallery.masonry{display:block;columns:4;column-gap:var(--sp-4)}
+          @media(max-width:1100px){.gallery.masonry{columns:3}}
+          @media(max-width:760px){.gallery.masonry{columns:2}}
+          .g-item{position:relative;break-inside:avoid;margin-bottom:var(--sp-4);cursor:pointer;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border);transition:box-shadow .2s ease}
+          .g-item img{width:100%;display:block}
+          .g-item:hover{box-shadow:var(--shadow-lg)}
+          .g-score{position:absolute;top:var(--sp-2);right:var(--sp-2);color:var(--status-ink);font-family:var(--mono);font-weight:600;font-size:var(--fs-xs);padding:3px 10px;border-radius:var(--r-full)}
+
+          .brands-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:var(--sp-4);margin-top:var(--sp-6)}
+          .brand-rich{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--surface);display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
+          .brand-img{width:100%;height:160px;object-fit:cover;border-bottom:1px solid var(--border);background:var(--surface-2)}
+          .brand-body{padding:var(--sp-4);min-width:0}
+          .brand-top{display:flex;align-items:center;gap:var(--sp-2);justify-content:space-between}
+          .brand-nm{font-weight:800;font-size:var(--fs-base);overflow-wrap:anywhere}
+          .brand-type{font-family:var(--mono);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:var(--r-xs);background:var(--accent-50);color:var(--accent-700);flex:none}
+          .brand-sum{font-size:var(--fs-sm);color:var(--muted);margin-top:var(--sp-2);line-height:1.45;overflow-wrap:anywhere}
+          .brand-row{font-size:var(--fs-xs);color:var(--muted);margin-top:var(--sp-2);overflow-wrap:anywhere;line-height:1.4}
+          .brand-props{margin:var(--sp-2) 0 0;padding-left:var(--sp-4);font-size:var(--fs-xs);color:var(--muted);line-height:1.4}
+          .brand-props li{margin-bottom:3px;overflow-wrap:anywhere}
+          .brand-pal{display:flex;gap:var(--sp-2);margin-top:var(--sp-3);flex-wrap:wrap}
+          .brand-pal .sw{width:22px;height:22px;border-radius:var(--r-xs);border:1px solid var(--border)}
+
+          .tune-card{border:1px solid var(--border);border-radius:var(--r);padding:var(--sp-4);background:var(--surface);box-shadow:var(--shadow-sm)}
+          .tune-card .tc-head{display:flex;align-items:center;gap:var(--sp-2)}
+          .tune-card .tc-head img{width:38px;height:38px;image-rendering:pixelated}
+          .tune-card.locked-card{opacity:.65;border-style:dashed;box-shadow:none}
+          .tc-lock{width:38px;height:38px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex:none}
+          .tc-lock svg{width:20px;height:20px}
+          .tune-btns{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-3)}
+          .tune-btns button{font-family:var(--font);font-size:var(--fs-xs);font-weight:700;padding:var(--sp-2) var(--sp-3);border-radius:var(--r-xs);border:1px solid var(--border);background:var(--surface-2);cursor:pointer;color:var(--text);transition:border-color .15s ease,background .15s ease}
+          .tune-btns button:hover{border-color:var(--faint)}
+          .tune-btns button.locked{opacity:.45;cursor:not-allowed}
+          .tune-btns button.locked:hover{border-color:var(--border)}
+          .tune-btns button.edit{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+          .tune-btns button.edit:hover{background:var(--accent-600);border-color:var(--accent-600)}
+
+          .society-main{display:flex;flex-direction:column;gap:var(--sp-5);margin-top:var(--sp-2)}
+          #society-diagram{width:100%}
+          .society-explainer{width:100%}
+          .run-steps{margin:0;padding-left:var(--sp-5);columns:2;column-gap:var(--sp-9);font-size:var(--fs-md);line-height:1.55}
+          .run-steps li{color:var(--muted);margin-bottom:var(--sp-2);break-inside:avoid}
+          .run-steps li b{color:var(--text)}
+          @media(max-width:720px){.run-steps{columns:1}}
+          .qwen-note{font-size:var(--fs-sm);color:var(--muted);margin-top:var(--sp-4);line-height:1.55}
+
+          /* 2D node-graph flowchart (home + live run) */
+          .flowchart{border:1px solid var(--border);border-radius:var(--r);padding:var(--sp-3);background:var(--surface-2);background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:20px 20px}
+          .fc-svg{width:100%;max-width:1060px;height:auto;display:block;margin:0 auto;overflow:visible}
+          @media(max-width:820px){.flowchart{overflow-x:auto;-webkit-overflow-scrolling:touch}.fc-svg{min-width:680px}}
+          .fc-edge{fill:none;stroke:var(--faint);stroke-width:2;stroke-dasharray:5 6;opacity:.45}
+          .fc-edge.trunk{stroke-dasharray:none;opacity:.3}
+          .fc-edge.flowing{stroke:var(--flow);stroke-width:2.6;opacity:1;animation:edgeflow .8s linear infinite}
+          @keyframes edgeflow{to{stroke-dashoffset:-22}}
+          .fc-elabel{fill:var(--muted);font-family:var(--mono);font-size:10px;font-weight:600;text-anchor:middle}
+          .fc-pill{display:flex;align-items:center;justify-content:center;gap:6px;height:100%;font-family:var(--mono);font-size:var(--fs-xs);font-weight:600;border:1px dashed var(--border);border-radius:var(--r-sm);background:var(--surface);box-sizing:border-box}
+          .fc-pill.trigger{color:var(--amber);border-color:color-mix(in srgb,var(--amber) 50%,transparent);background:var(--amber-50)}
+          .fc-pill.trigger svg{width:13px;height:13px;flex:none}
+          .fc-node{position:relative;display:flex;align-items:center;gap:var(--sp-2);height:100%;padding:var(--sp-2) var(--sp-3);border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);box-shadow:var(--shadow-sm);box-sizing:border-box;transition:border-color .3s ease,box-shadow .3s ease}
+          .fc-node.active{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 24%,transparent)}
+          .fc-node.done{border-color:color-mix(in srgb,var(--c) 45%,var(--border))}
+          .fc-node.core{border-color:var(--accent);background:var(--accent-50);box-shadow:0 0 0 1px var(--accent)}
+          .fc-node.col{flex-direction:column;text-align:center;justify-content:center;gap:5px;padding:var(--sp-2)}
+          .fc-node.col .fc-name{justify-content:center}
+          .fc-node.col .fc-tools{justify-content:center}
+          .fc-node.locked{opacity:.55;border-style:dashed;box-shadow:none}
+          .fc-lockicon{color:var(--faint);line-height:0;flex:none}
+          .fc-lockicon svg{width:22px;height:22px}
+          .fc-edge.locked{opacity:.25;stroke-dasharray:3 5}
+          .fc-sprite{width:40px;height:40px;image-rendering:pixelated;flex:none}
+          .fc-node.active .fc-sprite{animation:bob 1.05s ease-in-out infinite}
+          .fc-body{flex:1;min-width:0;line-height:1.3}
+          .fc-node:not(.col) .fc-body{padding-right:var(--sp-3)}
+          .fc-name{font-weight:700;font-size:var(--fs-sm);display:flex;align-items:center;gap:6px}
+          .fc-desc{font-size:var(--fs-2xs);color:var(--muted);margin-top:1px}
+          .fc-tools{display:flex;gap:var(--sp-1);flex-wrap:wrap;margin-top:5px}
+          .fc-tool{font-family:var(--mono);font-size:9px;font-weight:500;padding:1px 6px;border-radius:var(--r-xs);background:var(--surface-2);border:1px solid var(--border);color:var(--muted);white-space:nowrap}
+          .fc-dot{width:7px;height:7px;border-radius:50%;background:var(--c);opacity:0}
+          .fc-node.active .fc-dot{opacity:1;animation:blip .9s steps(1) infinite}
+          .fc-check{position:absolute;top:6px;right:9px;color:var(--c);font-weight:800;opacity:0;transition:opacity .3s ease}
+          .fc-node.done .fc-check{opacity:1}
+          .fc-status{display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-4) auto 0;max-width:660px;padding:var(--sp-3) var(--sp-4);border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:var(--fs-sm);box-sizing:border-box}
+          .fc-status.hidden{display:none}
+          .fc-spin{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex:none}
+          @keyframes spin{to{transform:rotate(360deg)}}
+
+          .run-layout{display:flex;gap:var(--sp-5);align-items:flex-start;margin-top:var(--sp-4)}
+          .run-flow{flex:1;min-width:0}
+          .run-log{flex:0 0 340px;position:sticky;top:78px;max-height:calc(100vh - 100px);overflow-y:auto}
+          .run-log .timeline{max-width:none;margin-top:0}
+          .run-log .entry{flex-direction:column;gap:var(--sp-2);padding:var(--sp-3)}
+          .run-log .entry .who{flex:0 0 auto}
+          .run-log .entry img.thumb{width:64px;height:80px}
+          @media(max-width:900px){.run-layout{display:block}.run-log{position:static;max-height:none;margin-top:var(--sp-5)}.run-log .entry{flex-direction:row}}
+        </style>
+        <div class="society">
+          <h2 class="sec-title">A society of specialised agents</h2>
+          <p class="page-sub">Each agent owns one job and hands off over a shared blackboard. The Critic scores every creative and sends weak work back for revision. That self-critique loop is the moat.</p>
+          <div class="society-main">
+            <div id="society-diagram"></div>
+            <div class="society-explainer">
+              <h4 class="sub-title">How a run works</h4>
+              <ol class="run-steps">
+                <li><b>Strategist</b> scrapes and web-searches the brand into a structured Brand Kit.</li>
+                <li><b>Director</b> plans the campaign and orchestrates the sub-agents.</li>
+                <li><b>Copywriter</b> writes several framework-diverse angles, each anchored to a real fact.</li>
+                <li><b>Design Researcher</b> pulls real Pinterest references into a design brief.</li>
+                <li><b>Art Director</b> generates each creative and composites the type layer.</li>
+                <li><b>Critic</b> scores every creative 0 to 100 and sends weak work back for revision.</li>
+                <li>The best result is kept, and lessons are written to <b>memory</b> for next time.</li>
+              </ol>
+              <p class="qwen-note">Everything runs on <b>Qwen&nbsp;Cloud</b>. The self-critique loop and shared memory are what make this a <b>Track 3 agent society</b>, not a single prompt.</p>
+            </div>
+          </div>
+          <h3 class="sec-title mt">Meet your agents</h3>
+          <p class="page-sub">Edit any live agent's system prompt. Reference docs, tool access, and the agents below are coming soon.</p>
+          <div id="tune-list"></div>
+          <div class="meta-line">Every model runs on Qwen&nbsp;Cloud (DashScope) · semantic memory via text-embedding-v3 · live references via Pinterest</div>
         </div>
-        <div class="agent-row" id="agent-legend"></div>
       </section>
 
       <!-- NEW CAMPAIGN -->
       <section class="view hidden" id="view-new">
         <h1 class="page-title">New campaign</h1>
-        <p class="page-sub">Pick a brand (or add one from a URL), set the objective, and let the team work.</p>
+        <p class="page-sub">Paste a product URL and the team researches the brand, writes the angles, designs the ads, and scores them. Or reuse a brand it already knows.</p>
         <div class="panel">
-          <label class="field">
-            <span>Brand</span>
-            <div class="brand-pick">
-              <select id="brand-select"></select>
-              <button class="btn ghost sm" id="add-brand-btn">+ Add from URL</button>
-            </div>
-          </label>
-          <div class="add-brand hidden" id="add-brand-row">
-            <input id="brand-url" placeholder="https://yourbrand.com">
-            <button class="btn primary sm" id="extract-btn">Extract brand</button>
+          <div class="chips" id="mode-chips">
+            <button class="chip active" data-mode="url">From product URL</button>
+            <button class="chip" data-mode="saved">Saved brand</button>
+          </div>
+          <div id="mode-url">
+            <label class="field"><span>Product URL</span>
+              <input id="brand-url" placeholder="https://yourbrand.com/product"></label>
+            <label class="field"><span>Short description <small>(optional, sharpens the brief)</small></span>
+              <textarea id="brand-desc" rows="2" placeholder="e.g. premium halal instant-coffee refill for busy Malaysian professionals"></textarea></label>
+          </div>
+          <div id="mode-saved" class="hidden">
+            <label class="field"><span>Saved brand</span>
+              <select id="brand-select"></select></label>
           </div>
           <label class="field"><span>Objective</span>
             <input id="objective" placeholder="Drive first purchases for the summer collection"></label>
@@ -81,10 +280,10 @@
             </div>
           </label>
           <div class="row2">
-            <label class="field"><span>Variants</span><input id="n" type="number" min="1" max="4" value="3"></label>
+            <label class="field"><span>Variants</span><input id="n" type="number" min="1" max="10" value="10"></label>
             <label class="field"><span>Max revision rounds</span><input id="rounds" type="number" min="0" max="3" value="2"></label>
           </div>
-          <button class="btn primary lg" id="generate-btn">Generate ads ✦</button>
+          <button class="btn primary lg" id="generate-btn">Generate ads</button>
         </div>
       </section>
 
@@ -95,7 +294,26 @@
           <span class="status-pill" id="run-status">running</span>
         </div>
         <p class="page-sub" id="run-objective"></p>
-        <div class="timeline" id="timeline"></div>
+        <div class="run-error hidden" id="run-error" role="alert"></div>
+        <div class="run-results hidden" id="run-results"></div>
+        <div class="run-layout">
+          <div class="run-flow">
+            <div class="flowchart" id="work-flowchart"></div>
+            <div class="fc-status hidden" id="fc-status"><span class="fc-spin"></span><span id="fc-status-text"></span></div>
+          </div>
+          <div class="run-log"><div class="timeline" id="timeline"></div></div>
+        </div>
+        <button id="jump-new" class="jump-new hidden" onclick="jumpToBottom()">↓ <span id="jump-count">0</span> new</button>
+      </section>
+
+      <!-- HISTORY -->
+      <section class="view hidden" id="view-history">
+        <h1 class="page-title">Run history</h1>
+        <p class="page-sub">Every past campaign, its society timeline, and the creatives it produced.</p>
+        <div class="history-layout">
+          <div id="runs-list"></div>
+          <div id="run-detail"></div>
+        </div>
       </section>
 
       <!-- GALLERY -->
@@ -105,6 +323,21 @@
         <div class="gallery" id="gallery"></div>
       </section>
 
+      <!-- ABOUT -->
+      <section class="view hidden" id="view-about">
+        <h1 class="page-title">About AdLoop</h1>
+        <p class="page-sub wide">AdLoop is an open-source, multi-agent "society" that turns a single product, service, or app URL into finished, on-brand ad creatives. Built for the Global AI Hackathon with Qwen Cloud, Track 3: Agent Society.</p>
+        <div class="panel about-panel">
+          <p class="about-p">A <b>Strategist</b> scrapes and web-searches the brand into a structured Brand Kit. A <b>Director</b> orchestrates a <b>Copywriter</b>, a <b>Design Researcher</b> (grounded in real Pinterest references), and an <b>Art Director</b>. A vision-model <b>Critic</b> scores every creative 0 to 100 and sends weak work back for revision before you see it, and a persistent <b>memory</b> makes each run sharper than the last.</p>
+          <p class="about-p">Everything runs on <b>Qwen Cloud</b> (DashScope): qwen-plus, qwen-max, qwen-vl-max, wan2.2 for images, and text-embedding-v3 for memory.</p>
+          <div class="about-links">
+            <a class="btn ghost" href="https://github.com/dany2048" target="_blank" rel="noopener">GitHub</a>
+            <a class="btn ghost" href="/docs" target="_blank" rel="noopener">API docs</a>
+            <a class="btn ghost" href="https://www.linkedin.com/in/danyal-digital/" target="_blank" rel="noopener">Built by Danyal</a>
+          </div>
+        </div>
+      </section>
+
       <!-- BRANDS -->
       <section class="view hidden" id="view-brands">
         <h1 class="page-title">Brands</h1>
@@ -112,6 +345,22 @@
         <div class="cards" id="brands-list"></div>
       </section>
     </main>
+  </div>
+</div>
+<div id="prompt-modal" class="modal-overlay hidden" onclick="if(event.target===this)closePromptModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 class="modal-title">Tune the agents</h2>
+      <button class="modal-x" onclick="closePromptModal()" aria-label="Close">✕</button>
+    </div>
+    <p class="page-sub">Edit any agent's system prompt live. Keep the <code>{placeholders}</code> intact. Applies to the next run.</p>
+    <div id="prompts-list"></div>
+  </div>
+</div>
+<div id="creative-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeCreative()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><h2 class="modal-title">Creative details</h2><button class="modal-x" onclick="closeCreative()" aria-label="Close">✕</button></div>
+    <div id="creative-body"></div>
   </div>
 </div>
 <script src="/app.js"></script>

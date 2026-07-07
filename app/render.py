@@ -31,6 +31,22 @@ def _data_url(path: str | Path) -> str:
     return f"data:{mime};base64,{base64.b64encode(p.read_bytes()).decode()}"
 
 
+def _hex_rgb(c: str) -> tuple[int, int, int]:
+    c = (c or "#000").lstrip("#")
+    if len(c) == 3:
+        c = "".join(ch * 2 for ch in c)
+    try:
+        return int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+    except (ValueError, IndexError):
+        return 0, 0, 0
+
+
+def _lum(c: str) -> float:
+    """Perceived luminance 0..1 — used to keep text readable regardless of brand color."""
+    r, g, b = _hex_rgb(c)
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255.0
+
+
 def _font_query(*names: str) -> str:
     """Build a Google Fonts query for the brand's fonts (best-effort; falls back to system)."""
     seen, parts = set(), []
@@ -60,6 +76,11 @@ def render_ad(
     palette = palette or ["#111111"]
     fonts = fonts or {}
     accent = next((c for c in palette if c.lower() not in ("#ffffff", "#fff", "#000000", "#000")), palette[0])
+    accent_lum = _lum(accent)
+    # dark brand accents vanish over a photo — force the eyebrow readable, and keep the CTA label legible on its button
+    eyebrow_color = accent if accent_lum > 0.42 else "#F2F2F2"
+    cta_text = "#0A0A0A" if accent_lum > 0.55 else "#FFFFFF"
+    band_color = "rgba(11,12,14,0.94)"
     display_font = fonts.get("display", "Archivo")
     body_font = fonts.get("body", "Inter")
 
@@ -70,7 +91,8 @@ def render_ad(
     html = _env.get_template("ad_base.html.j2").render(
         w=w, h=h, bg_data_url=_data_url(bg_image_path),
         headline=headline, subhead=subhead, cta=cta, eyebrow=eyebrow,
-        accent=accent, text_color="#FFFFFF", cta_text="#0A0A0A",
+        accent=accent, text_color="#FFFFFF", cta_text=cta_text, eyebrow_color=eyebrow_color,
+        band_color=band_color,
         display_font=display_font, body_font=body_font,
         font_query=_font_query(display_font, body_font),
         layout=layout, headline_px=headline_px,
@@ -93,8 +115,8 @@ if __name__ == "__main__":
 
     bg = sys.argv[1] if len(sys.argv) > 1 else "output/_smoke.png"
     out = render_ad(
-        bg, headline="MADE FROM NATURE", out_path="output/_render_test.png",
-        eyebrow="Allbirds", subhead="The world's most comfortable sneakers, from wool.",
+        bg, headline="MADE FOR MOVEMENT", out_path="output/_render_test.png",
+        eyebrow="Lumora", subhead="The everyday essential, reimagined.",
         cta="Shop the bestseller", palette=["#A8C686", "#6B7F61", "#000000"],
         fonts={"display": "Archivo", "body": "Inter"}, layout="lower", channel="instagram",
     )

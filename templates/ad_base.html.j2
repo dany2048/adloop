@@ -17,9 +17,15 @@
   .scrim {
     position:absolute; inset:0;
     background:linear-gradient(
-      {% if layout == 'top' %}to bottom, rgba(0,0,0,.72) 0%, rgba(0,0,0,.30) 38%, rgba(0,0,0,0) 60%
-      {% elif layout == 'center' %}to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,.55) 100%
-      {% else %}to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.38) 40%, rgba(0,0,0,0) 68%{% endif %});
+      {% if layout == 'top' %}to bottom, rgba(0,0,0,.82) 0%, rgba(0,0,0,.42) 34%, rgba(0,0,0,0) 58%
+      {% elif layout == 'center' %}to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,.68) 100%
+      {% else %}to top, rgba(0,0,0,.86) 0%, rgba(0,0,0,.5) 36%, rgba(0,0,0,0) 66%{% endif %});
+  }
+  /* solid bottom band: product stays fully clear above it — text never covers the product */
+  .band {
+    position:absolute; left:0; right:0; bottom:0; height:42%;
+    background:{{ band_color }};
+    border-top:5px solid {{ accent }};
   }
   .content {
     position:absolute; left:0; right:0; padding:{{ pad }}px;
@@ -29,7 +35,7 @@
     {% else %}bottom:0; align-items:flex-start; text-align:left;{% endif %}
   }
   .eyebrow { font-size:{{ (h*0.022)|round|int }}px; letter-spacing:.14em; text-transform:uppercase;
-             font-weight:700; color:{{ accent }}; }
+             font-weight:700; color:{{ eyebrow_color }}; text-shadow:0 1px 8px rgba(0,0,0,.55); }
   .headline {
     font-family:'{{ display_font }}', '{{ body_font }}', system-ui, sans-serif;
     font-weight:800; line-height:1.02; font-size:{{ headline_px }}px;
@@ -47,7 +53,7 @@
 </head>
 <body>
   <div class="ad">
-    <div class="scrim"></div>
+    {% if layout == 'band' %}<div class="band"></div>{% else %}<div class="scrim"></div>{% endif %}
     <div class="content">
       {% if eyebrow %}<div class="eyebrow">{{ eyebrow }}</div>{% endif %}
       <div class="headline">{{ headline }}</div>

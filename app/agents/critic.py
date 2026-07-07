@@ -17,7 +17,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .. import config, qwen_client
+from .. import config, prompts, qwen_client
 
 PASS_OVERALL = float(os.getenv("ADLOOP_PASS_OVERALL", "78"))  # /100
 PASS_MIN_DIM = float(os.getenv("ADLOOP_PASS_MIN_DIM", "5"))   # /10
@@ -28,10 +28,10 @@ _RUBRIC = """You are a ruthless senior creative director reviewing a paid social
 spend. Judge the attached image as it will appear: small, in a fast-scrolling feed. Be specific and \
 demanding — your job is to catch what would waste money, then say exactly how to fix it.
 
-Score each dimension 0-10 (10 = excellent):
+Score each dimension 0-10 (10 = excellent). Be HARSH — most real ads score 4-7. Reserve 8-10 for genuinely publishable, agency-grade work. When in doubt, score lower.
 - thumbstop      : does it stop the scroll in <1s? bold focal point, instant intrigue.
-- hierarchy      : one clear focal point; eye flows hook → product → CTA; not cluttered.
-- legibility     : is ALL text crisp and readable at thumbnail size? enough contrast? no text on busy areas? safe margins?
+- hierarchy      : one clear focal point; eye flows hook → product → CTA; not cluttered. CAP AT 5 if any text or the CTA button overlaps / covers the main product or its focal point.
+- legibility     : Look HARD at EVERY piece of text, including the small brand/eyebrow line at the top. Is each one crisp and high-contrast at thumbnail size? CAP AT 4 if ANY text element is low-contrast, hard to read, sits on a busy area, or blends into the background. Do not be lenient here.
 - brand_fit      : matches the brand's tone, palette, and rules below?
 - hook_clarity   : is the headline/hook a specific, compelling promise — not vague fluff?
 - cta_visibility : is the call-to-action present, obvious, and clickable-looking?
@@ -72,7 +72,8 @@ def _parse_json(text: str) -> dict[str, Any]:
 
 def review(image_path: str | Path, brief: dict[str, Any], brand_kit: dict[str, Any]) -> dict[str, Any]:
     """Score one rendered creative. Returns {scores, overall, pass, rationale, required_changes}."""
-    instruction = _RUBRIC.format(
+    instruction = prompts.render(
+        "critic", _RUBRIC,
         tone=brand_kit.get("tone", ""),
         rules=brand_kit.get("rules", []),
         palette=brand_kit.get("palette", []),

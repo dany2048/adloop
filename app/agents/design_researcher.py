@@ -34,7 +34,9 @@ def _query(brand_kit: dict[str, Any], objective: str) -> str:
     return f"{name} instagram ad creative design layout".strip()
 
 
-_SIZE_ORDER = ["/originals/", "/736x/", "/564x/", "/474x/", "/236x/"]
+# Only accept large sizes — this drops the tiny 30x30/60x60/236x junk thumbnails
+# (placeholder "photo coming soon" images, favicons, logos) that look terrible as references.
+_ACCEPT = ["/originals/", "/736x/", "/564x/", "/474x/"]
 
 
 def _pinterest_search(query: str, limit: int = 6) -> list[str]:
@@ -44,24 +46,26 @@ def _pinterest_search(query: str, limit: int = 6) -> list[str]:
     r = requests.post(
         _PIN_ENDPOINT,
         params={"token": config.APIFY_API_KEY},
-        json={"queries": [query], "limit": limit, "type": "all-pins"},
+        json={"queries": [query], "limit": max(limit * 3, 18), "type": "all-pins"},
         timeout=220,
     )
     data = r.json()
     if isinstance(data, dict) and data.get("error"):
         raise RuntimeError(data["error"].get("type", "apify error"))
 
-    # Each pin yields the same image at several sizes (…/<size>/<hash>.jpg). Keep the
-    # largest size per unique hash, so we hand Qwen-VL the most legible references.
-    best: dict[str, str] = {}
+    # Each pin yields the same image at several sizes (…/<size>/<hash>.jpg). Keep the largest
+    # ACCEPTED size per unique hash; skip anything only available below 474x (that's the junk).
+    best: dict[str, tuple[int, str]] = {}
     for u in _PINIMG_RE.findall(json.dumps(data)):
         key = u.rsplit("/", 1)[-1]  # the hash filename = the unique image
-        rank = next((i for i, s in enumerate(_SIZE_ORDER) if s in u), len(_SIZE_ORDER))
+        rank = next((i for i, s in enumerate(_ACCEPT) if s in u), None)
+        if rank is None:
+            continue  # too small / placeholder → skip
         if key not in best or rank < best[key][0]:
             best[key] = (rank, u)
-    urls = [v[1] for v in best.values()]
+    urls = [u for _, u in sorted(best.values())]  # best quality first
     if not urls:
-        raise RuntimeError("no images returned")
+        raise RuntimeError("no usable references")
     return urls[:limit]
 
 
