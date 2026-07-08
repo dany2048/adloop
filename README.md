@@ -17,6 +17,8 @@ Give it a product URL and a team of AI agents research the brand, write the copy
 
 **Live demo:** https://danyuav-adloop.hf.space
 
+![AdLoop architecture](architecture.png)
+
 ---
 
 ## Why it's an "Agent Society" (Track 3)
