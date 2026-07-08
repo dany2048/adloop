@@ -1,5 +1,7 @@
 # Root Dockerfile — used by Hugging Face Spaces (Docker SDK).
-# Base image ships Chromium + all its system libs, so there's no `playwright install` step to fail.
+# Base image ships Chromium + all its system libs. requirements pins playwright==1.44.0 to
+# match this image; we still run `playwright install chromium` so the browser binary is
+# guaranteed present regardless of the resolved patch version.
 # (For a generic VM deploy, use deploy/setup.sh instead; for other container hosts see deploy/Dockerfile.)
 FROM mcr.microsoft.com/playwright/python:v1.44.0-jammy
 
@@ -7,6 +9,10 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Ensure the Chromium build matching the installed Playwright is present (the base image's
+# pre-bundled browser can drift from the pip-resolved Playwright).
+RUN python -m playwright install chromium
 
 # Pre-fetch the rembg background-removal model at build time so the first product
 # composite on a live Space doesn't stall on a ~176MB download (best-effort; runtime
